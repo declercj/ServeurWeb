@@ -1,0 +1,154 @@
+#!/usr/bin/perl
+
+if(@ARGV){
+    if($ARGV[0] eq "start"){
+       	lancerServeur() || exit 1;
+	exit 0;
+    }
+    elsif($ARGV[0] eq "stop"){
+	arreterServeur() || exit 1;
+	exit 0;
+    }
+    elsif($ARGV[0] eq "status"){
+	status();
+    }
+    else{
+	die "Erreur: options disponibles: start, stop, status\n";
+    }
+}
+
+sub enregistrerPID{
+    open(PID,">>/tmp/.comanche_pid");
+    print PID "@_\n";
+    close(PID);
+}
+
+sub lancerServeur{
+    
+    #lecture fichier de config
+    lireConf();#hachage de conf $conf{clé}
+    
+    use Socket;
+    ### création de la socket ###
+    socket(SERVEUR,PF_INET,SOCK_STREAM,getprotobyname('tcp'));
+    setsockopt(SERVEUR,SOL_SOCKET, SO_REUSEADDR,1);
+    $mon_adresse = sockaddr_in ($conf{"port"},INADDR_ANY);
+    bind(SERVEUR, $mon_adresse) || die ("bind");
+    listen (SERVEUR, SOMAXCONN) || die ("listen");	
+    print "Le serveur écoute sur le port $conf{\"port\"} et accepte $conf{\"clients\"} clients max\n";
+    
+    #création du répartiteur (qui acceptera les connexions)
+    $repartiteur=fork;
+    
+    if($repartiteur==0){
+	
+	open(PID,">/tmp/.comanche_pid");
+	print PID "$$\n";
+	close(PID);
+	# Gestion des connexions des clients 
+	#et création des ouvriers
+	$compteurClient=0;
+
+	while(accept(CLIENT,SERVEUR) || die ("accept")){
+	    if($compteurClient < $conf{"clients"}){
+		$compteurClient++;
+		
+		while(<CLIENT>){
+		    print "$_";
+		    $requeteClient.=$_;
+		    if($_ =~ "^\r\n"){
+			last;
+		    }
+		}
+		##Création ouvrier##
+		$pid=fork;
+		if($pid == 0){
+		    enregistrerPID "$$";
+		    print "Nb clients : $compteurClient \n";
+		    
+		    $reponse="HTTP/1.1 200 OK\r\n\r\nRequête bien reçue\r\n\r\n";
+		    CLIENT->autoflush(1);
+		    print CLIENT $reponse;
+		    
+		    close(CLIENT);
+		    $compteurClient--;
+		   
+		}
+		else{
+		    close(CLIENT);
+		}
+		
+	    }
+	    else{
+		select(CLIENT);
+		CLIENT->autoflush(1);
+		print "503 Service Unavailable";
+		close(CLIENT);
+	    }	 
+	}
+
+	close(SERVEUR);
+	exit;
+	
+    }
+    else{
+	close(SERVEUR);
+    }
+}
+
+sub arreterServeur{
+    close(CLIENT) ;
+    close(SERVEUR);
+    open(PID,"/tmp/.comanche_pid");
+    while(<PID>){
+	kill(SIGTERM,$_);
+    }
+    close(PID);
+}
+
+
+sub status{
+
+}
+sub lireConf{
+    %conf;
+    open(CONFIG, "<comanche.conf") || die "Erreur lecture comanche.conf : $!";
+    while(<CONFIG>){
+	chomp($_);
+	if($_ =~ /^#/ || $_ =~ /^$/){next;}
+	if($_ =~ /^\s*set\s+(.+)\s+([^\s#]+)(?:\s*#.*)?$/){
+	    $cle=$1;
+	    $valeur=$2;
+	    
+	    if($cle =~ /port/){
+		die "Erreur de configuration: port $valeur invalide" if $valeur <1 && $valeur>65535;
+	    }
+	    elsif($cle =~ /error/){
+	    }
+	    elsif($cle =~ /index/){
+		#die "Erreur de configuration: $cle\n" unless -f $valeur;
+	    }
+	    elsif($cle =~ /logfile/){
+		open(LOGFILE, ">>$valeur") || die "Erreur de configuration : logfile $valeur n'est pas disponible\n";
+		close(LOGFILE) || die "Erreur fermeture $valeur\n";
+	    }
+	    elsif($cle =~ /clients/){
+		die "Erreur de configuration: $cle $valeur n'est pas valide\n" unless $valeur =~ /\d+/;
+	    }
+	    else{
+		die "Erreur de configuration: $cle n'est pas valide\n";
+	    }
+	    $conf{$cle}=$valeur;
+	}
+	elsif($_ =~ /^route/){}
+	elsif($_ =~ /^exec/){}
+	else{
+	    die "Erreur de configuration: la ligne $_ n'est pas valide\n";
+
+	}
+	
+    }
+
+
+
+}
