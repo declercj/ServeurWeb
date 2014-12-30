@@ -71,10 +71,13 @@ sub lancerServeur{
 		    print CLIENT $reponse;
 		    
 		    close(CLIENT);
-		    $compteurClient--;
+		    
+		    print "$$\n";
 		    exit 0;
 		}
 		else{
+		    wait();
+		    $compteurClient--;
 		    close(CLIENT);
 		}
 		
