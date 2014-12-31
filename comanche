@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-
+use POSIX ":sys_wait_h";
 if(@ARGV){
     if($ARGV[0] eq "start"){
        	lancerServeur() || exit 1;
@@ -18,6 +18,7 @@ if(@ARGV){
 }
 
 sub enregistrerPID{
+    #changer et mettre les ouvriers dans une table de hachage
     open(PID,">>/tmp/.comanche_pid");
     print PID "@_\n";
     close(PID);
@@ -48,8 +49,11 @@ sub lancerServeur{
 	# Gestion des connexions des clients 
 	#et création des ouvriers
 	$compteurClient=0;
-
+	$nbRequetesRecues=0;
+	$nbRequetesTraitees=0;
+	%ouvriers;
 	while(accept(CLIENT,SERVEUR) || die ("accept")){
+	    $nbRequetesRecues++;
 	    if($compteurClient < $conf{"clients"}){
 		$compteurClient++;
 		
@@ -76,8 +80,12 @@ sub lancerServeur{
 		    exit 0;
 		}
 		else{
-		    wait();
-		    $compteurClient--;
+		    $ouvriers{"$pid"}=1;
+		    while(($termine=waitpid(-1, &WNOHANG))>0){
+			delete $ouvriers{"$termine"};
+			$nbRequetesTraitees++;
+			$compteurClient--;
+		    }
 		    close(CLIENT);
 		}
 		
@@ -85,7 +93,8 @@ sub lancerServeur{
 	    else{
 		select(CLIENT);
 		CLIENT->autoflush(1);
-		print "503 Service Unavailable";
+		repondre503();
+		print "HTTP/1.1 503 Service Unavailable\r\n\r\nErreur 503 Service indisponible\r\n\r\n";
 		close(CLIENT);
 	    }	 
 	}
@@ -99,6 +108,15 @@ sub lancerServeur{
     }
 }
 
+sub repondre200{}
+sub repondre400{}
+sub repondre403{}
+sub repondre404{}
+sub repondre405{}
+sub repondre415{}
+sub repondre503{}
+sub repondre505{}
+
 sub arreterServeur{
     close(CLIENT) ;
     close(SERVEUR);
@@ -107,11 +125,24 @@ sub arreterServeur{
 	kill(SIGTERM,$_);
     }
     close(PID);
+    
+    open(PID, ">/tmp/.comanche_pid");
+    print PID "";
+    close(PID);
 }
 
 
 sub status{
-
+    open(PID,"/tmp/.comanche_pid") || die "Erreur: ouverture /tmp/.comanche_pid";
+    $pid=<PID>;
+    if(! $pid){
+	print "Le serveur n'est pas lancé\n";
+    }
+    else{
+	print "$pid";
+	#ajouter une ligne avec le nombre de requetes recues et le nombre de requetes traitees
+	#ajouter une ligne avec le nombre d(ouvriers actif et la liste de ces ouvriers
+    }
 }
 sub lireConf{
     %conf;
@@ -147,11 +178,6 @@ sub lireConf{
 	elsif($_ =~ /^exec/){}
 	else{
 	    die "Erreur de configuration: la ligne $_ n'est pas valide\n";
-
 	}
-	
     }
-
-
-
 }

@@ -105,7 +105,7 @@ sub lancerServeur {
 		    print WRITING $reponse;
 		    $reponse="";
 		    
-		    $compteurClient--;
+		    
 		    close(WRITING) || die "fermeture WRITING\n";
 		    exec "exit 0";
 		    #################ERREUR#####################################
@@ -130,10 +130,8 @@ sub lancerServeur {
 		    while(<READING>){
 			$reponseOuvrier="$reponseOuvrier$_";
 		    }
-		    print "$pid\n";
-		    kill(SIGTERM, "$pid") || die "erreur kill $!";
-		    print "$!\n";
-		    
+		    wait();
+		    $compteurClient--;
 		    CLIENT->autoflush(1);
 		    print CLIENT $reponseOuvrier;
 		    close(CLIENT);
