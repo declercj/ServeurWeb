@@ -64,23 +64,38 @@ sub lancerServeur{
 			last;
 		    }
 		}
+		##verifier la requete ##
+		if($requeteClient =~ /GET (\/(.*)) HTTP\/1\.1/ ){
+		    #la requete est conforme on recupère ce que le client demande
+		    $requeteClient=$1;
+		}
+		else{
+		    #si elle n'est pas bonne on renvoie une erreur 400
+		    repondre400();
+		    close(CLIENT);
+		    next;
+		}
+		
 		##Création ouvrier##
 		$pid=fork;
 		if($pid == 0){
 		    enregistrerPID "$$";
-		    print "Nb clients : $compteurClient \n";
+
+		    #on traite la requete
 		    
-		    $reponse="HTTP/1.1 200 OK\r\n\r\nRequête bien reçue\r\n\r\n";
+		    $reponse="HTTP/1.1 200 OK\r\n\r\n$requeteClient\r\n\r\n";
+		    #on envoie la requete et on ferme le client
 		    CLIENT->autoflush(1);
 		    print CLIENT $reponse;
 		    
 		    close(CLIENT);
 		    
-		    print "$$\n";
+		    
 		    exit 0;
 		}
 		else{
 		    $ouvriers{"$pid"}=1;
+		    print "Nb clients : $compteurClient \n";
 		    while(($termine=waitpid(-1, &WNOHANG))>0){
 			delete $ouvriers{"$termine"};
 			$nbRequetesTraitees++;
