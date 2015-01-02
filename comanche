@@ -80,14 +80,25 @@ sub lancerServeur{
 		$pid=fork;
 		if($pid == 0){
 		    enregistrerPID "$$";
-		    print "$requeteClient\n";
+		    print "RESSOURCE:$requeteClient\n";
 		    ##########traitement de la requete#####################
 
 		    ### aller chercher le fichier ###(utiliser conf{"route"} et conf{"to"}
+
+		    if($requeteClient=~/$conf{"route"}/){
+			print "La route est bonne\n";
+			$sed='s!'.$conf{"route"}.'!'.$conf{"to"}.'!';
+			print "$sed\n";
+			$requeteClient=~$sed;
+			print "le chemin est : $requeteClient\n";
+		    }
+		    else{
+			print "Ca marche pas\n";
+		    }
 		    
-		    $chemin = "/var/www/fichiers_serveur$requeteClient";
-		    print "$chemin\n";
-		    open(FICHIER , "$chemin") || die "FICHIER $!";
+		    #$chemin = "/var/www/fichiers_serveur$requeteClient";
+		    
+		    open(FICHIER , "$requeteClient") || die "FICHIER $!";
 		    while(<FICHIER>){
 			chomp;
 			$contenu.="$_</br>";
@@ -187,9 +198,11 @@ sub lireConf{
 		die "Erreur de configuration: port $valeur invalide" if $valeur <1 && $valeur>65535;
 	    }
 	    elsif($cle =~ /error/){
+		die "Erreur de configuration: $valeur n'existe pas\n" unless -f $valeur;
+		
 	    }
 	    elsif($cle =~ /index/){
-		#die "Erreur de configuration: $cle\n" unless -f $valeur;
+		#la verification se fait lors du traitement d'une requête car ce fichier n'est pas forcément présent
 	    }
 	    elsif($cle =~ /logfile/){
 		open(LOGFILE, ">>$valeur") || die "Erreur de configuration : logfile $valeur n'est pas disponible\n";
@@ -206,7 +219,8 @@ sub lireConf{
 	elsif($_ =~ /^\s*route\s+(.*)\s+to\s+(.*)/){
 	    
 	    $conf{"route"}=$1;
-	    $conf{"to"}=$2;
+	    $conf{"to"}=$2; 
+	    
 	}
 	elsif($_ =~ /^\s*exec\s+(.*)\s+from\s+(.*)/){
 	    
