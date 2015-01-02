@@ -80,10 +80,17 @@ sub lancerServeur{
 		$pid=fork;
 		if($pid == 0){
 		    enregistrerPID "$$";
-
+		    print "$requeteClient\n";
 		    #on traite la requete
+		    $chemin = "/var/www/fichiers_serveur$requeteClient";
+		    print "$chemin\n";
+		    open(FICHIER , "$chemin") || die "FICHIER $!";
+		    while(<FICHIER>){
+			$contenu.=$_;
+		    }
+		    print "$contenu\n";
 		    
-		    $reponse="HTTP/1.1 200 OK\r\n\r\n$requeteClient\r\n\r\n";
+		    $reponse="HTTP/1.1 200 OK\r\n\r\n$contenu\r\n\r\n";
 		    #on envoie la requete et on ferme le client
 		    CLIENT->autoflush(1);
 		    print CLIENT $reponse;
