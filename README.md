@@ -12,17 +12,17 @@ Cochez (en mettant un X dans les [ ]) les fonctionnalités qui sont
 implémentées dans votre projet.
 
   - [X] appel de commande (paramètres, détachement, etc)
-  - [\] fichier de configuration
+  - [X] fichier de configuration
   - [X] gestion du port d'écoute
-  - [ ] vérification du format des requêtes HTTP/1.1 (RFC 7230, etc.)
-  - [ ] réponse toujours valide HTTP/1.1 (RFC 7230, etc.)
-  - [ ] code HTTP gérés
+  - [X] vérification du format des requêtes HTTP/1.1 (RFC 7230, etc.)
+  - [commencé ] réponse toujours valide HTTP/1.1 (RFC 7230, etc.)
+  - [commencé ] code HTTP gérés
   - [ ] type de fichiers respecté (html/png/texte)
   - [ ] gestion des répertoires
   - [ ] gestion de la page d'erreur
   - [ ] gestion des logs
   - [X] gestion des clients en //
-  - [ ] gestion du max de clients
+  - [quasi fini] gestion du max de clients
   - [ ] routes statiques
   - [ ] routes statiques avec expression régulière
   - [ ] cgi statiques

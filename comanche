@@ -81,16 +81,23 @@ sub lancerServeur{
 		if($pid == 0){
 		    enregistrerPID "$$";
 		    print "$requeteClient\n";
-		    #on traite la requete
+		    ##########traitement de la requete#####################
+
+		    ### aller chercher le fichier ###(utiliser conf{"route"} et conf{"to"}
+		    
 		    $chemin = "/var/www/fichiers_serveur$requeteClient";
 		    print "$chemin\n";
 		    open(FICHIER , "$chemin") || die "FICHIER $!";
 		    while(<FICHIER>){
-			$contenu.=$_;
+			chomp;
+			$contenu.="$_</br>";
 		    }
+		    ###
+		    ###fabrication de la requete ###
+		    $contenu="<html><head><title>$requeteClient</title></head><body>$contenu</body></html>";
 		    print "$contenu\n";
-		    
 		    $reponse="HTTP/1.1 200 OK\r\n\r\n$contenu\r\n\r\n";
+		    
 		    #on envoie la requete et on ferme le client
 		    CLIENT->autoflush(1);
 		    print CLIENT $reponse;
