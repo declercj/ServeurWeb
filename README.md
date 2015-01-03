@@ -12,7 +12,7 @@ Cochez (en mettant un X dans les [ ]) les fonctionnalités qui sont
 implémentées dans votre projet.
 
   - [X] appel de commande (paramètres, détachement, etc)
-  - [X] fichier de configuration
+  - [reste à permettre d'avoir plusieurs routes de projections] fichier de configuration
   - [X] gestion du port d'écoute
   - [X] vérification du format des requêtes HTTP/1.1 (RFC 7230, etc.)
   - [commencé ] réponse toujours valide HTTP/1.1 (RFC 7230, etc.)
@@ -23,8 +23,8 @@ implémentées dans votre projet.
   - [ ] gestion des logs
   - [X] gestion des clients en //
   - [quasi fini] gestion du max de clients
-  - [ ] routes statiques
-  - [ ] routes statiques avec expression régulière
+  - [X] routes statiques
+  - [fonctionne mais avec un sed en bash] routes statiques avec expression régulière
   - [ ] cgi statiques
   - [ ] cgi avec expression régulière
   - [ ] gestion des paramètres de cgi
