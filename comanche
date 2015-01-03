@@ -83,29 +83,28 @@ sub lancerServeur{
 		    print "RESSOURCE:$requeteClient\n";
 		    ##########traitement de la requete#####################
 
-		    ### aller chercher le fichier ###(utiliser conf{"route"} et conf{"to"}
+		    ### aller chercher le fichier ###
 
 		    if($requeteClient=~/$conf{"route"}/){
 			print "La route est bonne\n";
-			$sed='s!'.$conf{"route"}.'!'.$conf{"to"}.'!';
-			print "$sed\n";
-			$requeteClient=~$sed;
-			print "le chemin est : $requeteClient\n";
+			
+			$chemin=`echo $requeteClient | sed -r 's!$conf{"route"}!$conf{"to"}!'`;
+			##$requeteClient=~s!$conf{route}!$conf{"to"}!; ## ne fonctionne pas
+			print "le chemin est : $chemin\n";
 		    }
 		    else{
 			print "Ca marche pas\n";
 		    }
 		    
-		    #$chemin = "/var/www/fichiers_serveur$requeteClient";
-		    
-		    open(FICHIER , "$requeteClient") || die "FICHIER $!";
+		    		    
+		    open(FICHIER , $chemin)|| repondre404();
 		    while(<FICHIER>){
 			chomp;
 			$contenu.="$_</br>";
 		    }
 		    ###
 		    ###fabrication de la requete ###
-		    $contenu="<html><head><title>$requeteClient</title></head><body>$contenu</body></html>";
+		    $contenu="<html><head><meta charset=\'utf-8\' ><title>$requeteClient</title></head><body>$contenu</body></html>";
 		    print "$contenu\n";
 		    $reponse="HTTP/1.1 200 OK\r\n\r\n$contenu\r\n\r\n";
 		    
@@ -151,7 +150,11 @@ sub lancerServeur{
 sub repondre200{}
 sub repondre400{}
 sub repondre403{}
-sub repondre404{}
+sub repondre404{
+    print CLIENT "HTTP/1.1 404 NOT FOUND\r\n\r\nErreur 404 NOT FOUND\r\n\r\n";
+    close(CLIENT);
+    exit 0;
+}
 sub repondre405{}
 sub repondre415{}
 sub repondre503{}
