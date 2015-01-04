@@ -22,7 +22,7 @@ implémentées dans votre projet.
   - [X] gestion de la page d'erreur
   - [ ] gestion des logs
   - [X] gestion des clients en //
-  - [quasi fini] gestion du max de clients
+  - [X] gestion du max de clients
   - [X] routes statiques
   - [fonctionne mais avec un sed en bash] routes statiques avec expression régulière
   - [ ] cgi statiques
