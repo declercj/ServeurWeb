@@ -15,11 +15,11 @@ implémentées dans votre projet.
   - [reste à permettre d'avoir plusieurs routes de projections] fichier de configuration
   - [X] gestion du port d'écoute
   - [X] vérification du format des requêtes HTTP/1.1 (RFC 7230, etc.)
-  - [commencé ] réponse toujours valide HTTP/1.1 (RFC 7230, etc.)
-  - [commencé ] code HTTP gérés
+  - [reste à ajouter les lignes host, content-type... ] réponse toujours valide HTTP/1.1 (RFC 7230, etc.)
+  - [tous implémentés, plus qu'a tester dans le prog principal ] code HTTP gérés
   - [ ] type de fichiers respecté (html/png/texte)
   - [ ] gestion des répertoires
-  - [ ] gestion de la page d'erreur
+  - [X] gestion de la page d'erreur
   - [ ] gestion des logs
   - [X] gestion des clients en //
   - [quasi fini] gestion du max de clients

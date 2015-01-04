@@ -72,7 +72,6 @@ sub lancerServeur{
 		else{
 		    #si elle n'est pas bonne on renvoie une erreur 400
 		    repondre400();
-		    close(CLIENT);
 		    next;
 		}
 		
@@ -96,15 +95,17 @@ sub lancerServeur{
 			print "Ca marche pas\n";
 		    }
 		    
-		    		    
-		    open(FICHIER , $chemin)|| repondre404();
+		    ###
+		    ###il faut encore vérifier si le chemin existe
+		    ###
+		    open(FICHIER , $chemin)|| repondre403();
 		    while(<FICHIER>){
 			chomp;
 			$contenu.="$_</br>";
 		    }
 		    ###
-		    ###fabrication de la requete ###
-		    $contenu="<html><head><meta charset=\'utf-8\' ><title>$requeteClient</title></head><body>$contenu</body></html>";
+		    ###fabrication de la reponse ###
+		    $contenu="<html><head><meta charset=\'utf-8\'><title>$requeteClient</title></head><body>$contenu</body></html>";
 		    print "$contenu\n";
 		    $reponse="HTTP/1.1 200 OK\r\n\r\n$contenu\r\n\r\n";
 		    
@@ -130,11 +131,8 @@ sub lancerServeur{
 		
 	    }
 	    else{
-		select(CLIENT);
-		CLIENT->autoflush(1);
+		##trop de clients, service indisponible
 		repondre503();
-		print "HTTP/1.1 503 Service Unavailable\r\n\r\nErreur 503 Service indisponible\r\n\r\n";
-		close(CLIENT);
 	    }	 
 	}
 
@@ -148,17 +146,98 @@ sub lancerServeur{
 }
 
 sub repondre200{}
-sub repondre400{}
-sub repondre403{}
-sub repondre404{
-    print CLIENT "HTTP/1.1 404 NOT FOUND\r\n\r\nErreur 404 NOT FOUND\r\n\r\n";
+
+sub repondre400{
+    $contenu=creerPage("400 BAD REQUEST", "Erreur 400: Requête invalide");
+    
+    $reponse="HTTP/1.1 400 BAD REQUEST\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
+    close(CLIENT);
+}
+sub repondre403{
+    $contenu=creerPage("403 Forbidden", "Erreur 403: Forbidden");
+    
+    $reponse="HTTP/1.1 403 FORBIDDEN\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
     close(CLIENT);
     exit 0;
 }
-sub repondre405{}
-sub repondre415{}
-sub repondre503{}
-sub repondre505{}
+sub repondre404{
+    
+    $contenu=creerPage("404 NOT FOUND", "$requeteClient </br>Erreur 404: ressource non trouvée");
+    
+    $reponse="HTTP/1.1 404 NOT FOUND\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
+    close(CLIENT);
+    exit 0;
+    
+}
+sub repondre405{
+    $contenu=creerPage("405 METHOD NOT ALLOWED", "Erreur 405: method not allowed");
+    
+    $reponse="HTTP/1.1 405 METHOD NOT ALLOWED\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
+    close(CLIENT);
+    exit 0;
+}
+sub repondre415{
+    $contenu=creerPage("415 UNSUPPORTED MEDIA TYPE", "$requeteClient </br>Erreur 415: média non supporté");
+    
+    $reponse="HTTP/1.1 415 UNSUPPORTED MEDIA TYPE\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
+    close(CLIENT);
+    exit 0;
+}
+sub repondre503{
+    
+    $contenu=creerPage("503 SERVICE UNAVAILABLE", "Erreur 503: Service indisponible");
+    $reponse="HTTP/1.1 503 SERVICE UNAVAILABLE\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
+    close(CLIENT);
+    exit 0;
+}
+sub repondre505{
+    
+    $contenu=creerPage("505 HTTP VERSION NOT SUPPORTED", "$requeteClient </br> Erreur 505: version HTTP non supportée");
+    
+    $reponse="HTTP/1.1 505 HTTP VERSION NOT SUPPORTED\r\n\r\n$contenu\r\n\r\n";
+    #on envoie la reponse et on ferme le client
+    CLIENT->autoflush(1);
+    print CLIENT $reponse;
+    close(CLIENT);
+    exit 0;
+}
+sub creerPage{
+    
+    my $titre=@_[0];
+    my $corps=@_[1];
+    my $contenu="";
+    if($conf{"error"}){
+	open(PAGE, "$conf{\"error\"}") || die "$conf{\"error\"} n'existe pas";
+	while(<PAGE>){
+	    $contenu.=$_;
+	}
+	
+	$contenu=~s!<title>(.*)</title>!<title>$titre</title>!;
+	$contenu=~s!<body>(.*)</body>!<body><h1>$corps</h1></br>\1</body>!;
+    }
+    else{
+	$contenu="<html><head><meta charset=\'utf-8\'><title>$titre</title></head><body> <h1>$corps</h1> </body></html>";
+    }
+    return $contenu;
+}
 
 sub arreterServeur{
     close(CLIENT) ;
