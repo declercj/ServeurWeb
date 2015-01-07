@@ -217,7 +217,6 @@ sub repondre505{
     CLIENT->autoflush(1);
     print CLIENT $reponse;
     close(CLIENT);
-    exit 0;
 }
 sub creerPage{
     
