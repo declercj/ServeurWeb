@@ -12,11 +12,11 @@ Cochez (en mettant un X dans les [ ]) les fonctionnalités qui sont
 implémentées dans votre projet.
 
   - [X] appel de commande (paramètres, détachement, etc)
-  - [reste à permettre d'avoir plusieurs routes de projections] fichier de configuration
+  - [X] fichier de configuration
   - [X] gestion du port d'écoute
   - [X] vérification du format des requêtes HTTP/1.1 (RFC 7230, etc.)
   - [reste à ajouter les lignes host, content-type... ] réponse toujours valide HTTP/1.1 (RFC 7230, etc.)
-  - [tous implémentés, plus qu'a tester dans le prog principal ] code HTTP gérés
+  - [reste 404/415/405 ] code HTTP gérés
   - [ ] type de fichiers respecté (html/png/texte)
   - [ ] gestion des répertoires
   - [X] gestion de la page d'erreur

@@ -1,5 +1,7 @@
 #!/usr/bin/perl
+
 use POSIX ":sys_wait_h";
+
 if(@ARGV){
     if($ARGV[0] eq "start"){
        	lancerServeur() || exit 1;
@@ -65,7 +67,11 @@ sub lancerServeur{
 		    }
 		}
 		##verifier la requete ##
-		if($requeteClient =~ /GET (\/(.*)) HTTP\/1\.1/ ){
+		if($requeteClient =~ /GET (\/(.*))\sHTTP(\/.\..)/  ){
+		    if($3!='/1.1'){
+			repondre505();
+			next;
+		    }
 		    #la requete est conforme on recupère ce que le client demande
 		    $requeteClient=$1;
 		}
@@ -83,21 +89,27 @@ sub lancerServeur{
 		    ##########traitement de la requete#####################
 
 		    ### aller chercher le fichier ###
+		    foreach $key (keys(%route)){
+			if($requeteClient=~/$key/){
+			    print "La route est bonne\n";
+			    
+			    $chemin=`echo $requeteClient | sed -r 's!$key!$route{$key}!'`;
+			    ##$requeteClient=~s!$conf{route}!$conf{"to"}!; ## ne fonctionne pas
+			    print "le chemin est : $chemin\n";
+			    last;
+			}
 
-		    if($requeteClient=~/$conf{"route"}/){
-			print "La route est bonne\n";
-			
-			$chemin=`echo $requeteClient | sed -r 's!$conf{"route"}!$conf{"to"}!'`;
-			##$requeteClient=~s!$conf{route}!$conf{"to"}!; ## ne fonctionne pas
-			print "le chemin est : $chemin\n";
-		    }
-		    else{
-			print "Ca marche pas\n";
 		    }
 		    
-		    ###
-		    ###il faut encore vérifier si le chemin existe
-		    ###
+		    ####ne fonctionne pas , que le chemin soit bon ou pas #####
+		    #il faut trouver une solution
+		    #si le fichier n'existe pas
+		    #if(! -e $chemin){
+		#	repondre404();
+		 #   };
+   
+		    ##########################
+	       
 		    open(FICHIER , $chemin)|| repondre403();
 		    while(<FICHIER>){
 			chomp;
@@ -298,15 +310,17 @@ sub lireConf{
 	    $conf{$cle}=$valeur;
 	}
 	elsif($_ =~ /^\s*route\s+(.*)\s+to\s+(.*)/){
-	    
-	    $conf{"route"}=$1;
-	    $conf{"to"}=$2; 
+
+	    $route{$1}=$2;
+	    #$conf{"route"}=$1;
+	    #$conf{"to"}=$2; 
 	    
 	}
 	elsif($_ =~ /^\s*exec\s+(.*)\s+from\s+(.*)/){
-	    
-	    $conf{"exec"}=$1;
-	    $conf{"from"}=$2;
+
+	    $route{$1}=$2;
+	    #$conf{"exec"}=$1;
+	    #$conf{"from"}=$2;
 	}
 	else{
 	    die "Erreur de configuration: la ligne $_ n'est pas valide\n";
